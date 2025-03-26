@@ -1,0 +1,2 @@
+# analitico-server
+# analitico-api
