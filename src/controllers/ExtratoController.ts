@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PDFService } from '../services/PDFService';
 import { z } from 'zod';
 import ExtratoModel from '../models/ExtratoModel';
+import { validateDateParams } from '../utils/dateUtils';
 
 export class ExtratoController {
   static async uploadExtratoAnalitico(req: Request, res: Response) {
@@ -67,7 +68,8 @@ export class ExtratoController {
       let extratos;
       if (tomador) {
         extratos = await ExtratoModel.find({
-          "trabalhos.tomador": tomador
+          "trabalhos.tomador": tomador,
+          ...filtros
         });
       } else {
         extratos = await PDFService.obterExtratos(filtros);
@@ -91,6 +93,114 @@ export class ExtratoController {
         return res.status(500).json({ success: false, message: error.message });
       }
       return res.status(500).json({ success: false, message: 'Erro desconhecido ao listar extratos' });
+    }
+  }
+  
+  // Nova função para listar extratos por período com data de início e fim
+  static async listarExtratosPorPeriodo(req: Request, res: Response) {
+    try {
+      const { dataInicio, dataFim, matricula, nome, categoria } = req.query;
+      
+      // Validar e obter datas
+      const dateRange = await validateDateParams(
+        undefined, 
+        undefined, 
+        dataInicio as string, 
+        dataFim as string
+      );
+      
+      // Montar filtros
+      const filtros: any = {};
+      
+      // Filtros de texto
+      if (matricula) filtros.matricula = matricula;
+      if (nome) filtros.nome = { $regex: nome, $options: 'i' };
+      if (categoria) filtros.categoria = categoria;
+      
+      // Adicionar filtro de data baseado no range
+      const startYear = dateRange.from.getFullYear().toString();
+      const endYear = dateRange.to.getFullYear().toString();
+      
+      // Criar array com todos os meses no intervalo
+      const mesesPeriodo = [];
+      
+      // Se mesmo ano, filtra meses entre início e fim
+      if (startYear === endYear) {
+        const startMonth = dateRange.from.getMonth();
+        const endMonth = dateRange.to.getMonth();
+        
+        for (let i = startMonth; i <= endMonth; i++) {
+          mesesPeriodo.push(getMesAbreviado(i));
+        }
+        
+        filtros.ano = startYear;
+        filtros.mes = { $in: mesesPeriodo };
+      } else {
+        // Anos diferentes - mais complexo
+        // Será tratado como uma OR condition para cada faixa de ano/mês
+        const orConditions = [];
+        
+        // Meses do primeiro ano
+        const mesesPrimeiroAno = [];
+        for (let i = dateRange.from.getMonth(); i < 12; i++) {
+          mesesPrimeiroAno.push(getMesAbreviado(i));
+        }
+        
+        if (mesesPrimeiroAno.length > 0) {
+          orConditions.push({
+            ano: startYear,
+            mes: { $in: mesesPrimeiroAno }
+          });
+        }
+        
+        // Anos intermediários (todos os meses)
+        for (let ano = parseInt(startYear) + 1; ano < parseInt(endYear); ano++) {
+          orConditions.push({
+            ano: ano.toString(),
+            mes: { $in: ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'] }
+          });
+        }
+        
+        // Meses do último ano
+        const mesesUltimoAno = [];
+        for (let i = 0; i <= dateRange.to.getMonth(); i++) {
+          mesesUltimoAno.push(getMesAbreviado(i));
+        }
+        
+        if (mesesUltimoAno.length > 0) {
+          orConditions.push({
+            ano: endYear,
+            mes: { $in: mesesUltimoAno }
+          });
+        }
+        
+        // Se tivermos condições OR, usamos $or
+        if (orConditions.length > 0) {
+          filtros.$or = orConditions;
+        }
+      }
+      
+      // Buscar extratos com filtros
+      const extratos = await PDFService.obterExtratos(filtros);
+      
+      return res.status(200).json({
+        success: true,
+        data: extratos.map(extrato => ({
+          id: (extrato as any)._id,
+          matricula: extrato.matricula,
+          nome: extrato.nome,
+          mes: extrato.mes,
+          ano: extrato.ano,
+          categoria: extrato.categoria,
+          totalTrabalhos: extrato.trabalhos?.length || 0,
+          valorTotal: extrato.folhasComplementos?.liquido || 0
+        }))
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        return res.status(500).json({ success: false, message: error.message });
+      }
+      return res.status(500).json({ success: false, message: 'Erro desconhecido ao listar extratos por período' });
     }
   }
   
@@ -163,4 +273,10 @@ export class ExtratoController {
       return res.status(500).json({ success: false, message: 'Erro desconhecido ao obter resumo mensal' });
     }
   }
+}
+
+// Função auxiliar para converter número do mês para abreviação
+function getMesAbreviado(mesIndex: number): string {
+  const meses = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+  return meses[mesIndex];
 }

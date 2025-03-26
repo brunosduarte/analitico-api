@@ -52,4 +52,7 @@ router.get('/trabalhos/tomador/:tomador', ExtratoController.obterTrabalhosPorTom
 // Rota para obter resumo mensal
 router.get('/resumo/:mes/:ano', ExtratoController.obterResumoMensal);
 
+// Nova rota para consultar extratos por período
+router.get('/periodo', ExtratoController.listarExtratosPorPeriodo);
+
 export default router;

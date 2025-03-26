@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database';
 import extratoRoutes from './routes/extratoRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
 
 // Carrega variáveis de ambiente
 dotenv.config();
@@ -18,7 +19,8 @@ app.use(cors());
 app.use(express.json());
 
 // Rotas
-app.use('/', extratoRoutes);
+app.use('/analise', analyticsRoutes); // Novas rotas de análise para o dashboard
+app.use('/', extratoRoutes); // Rotas originais de extratos
 
 // Rota de verificação de saúde
 app.get('/health', (req, res) => {
