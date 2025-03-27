@@ -1,4 +1,4 @@
-import { parse, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { parse, startOfMonth, endOfMonth, parseISO } from 'date-fns'
 
 /**
  * Função para validar e obter intervalo de datas com base nos parâmetros
@@ -11,48 +11,50 @@ export async function validateDateParams(
   mes?: string,
   ano?: string,
   dataInicio?: string,
-  dataFim?: string
+  dataFim?: string,
 ): Promise<{ from: Date; to: Date }> {
   // Se dataInicio e dataFim estão presentes, usar essas datas
   if (dataInicio && dataFim) {
     try {
-      const from = parseISO(dataInicio);
-      const to = parseISO(dataFim);
-      
+      const from = parseISO(dataInicio)
+      const to = parseISO(dataFim)
+
       if (isNaN(from.getTime()) || isNaN(to.getTime())) {
-        throw new Error('Datas de início ou fim inválidas');
+        throw new Error('Datas de início ou fim inválidas')
       }
-      
-      return { from, to };
+
+      return { from, to }
     } catch (error) {
-      throw new Error('Datas de início ou fim em formato inválido. Use YYYY-MM-DD.');
+      throw new Error(
+        'Datas de início ou fim em formato inválido. Use YYYY-MM-DD.',
+      )
     }
   }
-  
+
   // Se mes e ano estão presentes, usar mês completo
   if (mes && ano) {
-    const mesNumero = getMesNumero(mes);
-    const anoNumero = parseInt(ano);
-    
+    const mesNumero = getMesNumero(mes)
+    const anoNumero = parseInt(ano)
+
     if (isNaN(mesNumero) || isNaN(anoNumero)) {
-      throw new Error('Mês ou ano inválidos');
+      throw new Error('Mês ou ano inválidos')
     }
-    
+
     // Criar data com o primeiro dia do mês
-    const from = new Date(anoNumero, mesNumero - 1, 1);
-    
+    const from = new Date(anoNumero, mesNumero - 1, 1)
+
     // Último dia do mês
-    const to = endOfMonth(from);
-    
-    return { from, to };
+    const to = endOfMonth(from)
+
+    return { from, to }
   }
-  
+
   // Caso padrão: usar mês atual
-  const now = new Date();
+  const now = new Date()
   return {
     from: startOfMonth(now),
-    to: endOfMonth(now)
-  };
+    to: endOfMonth(now),
+  }
 }
 
 /**
@@ -60,47 +62,49 @@ export async function validateDateParams(
  */
 export function parseDateRange(dateRangeStr: string): { from: Date; to: Date } {
   try {
-    const [fromStr, toStr] = dateRangeStr.split(' - ');
-    
+    const [fromStr, toStr] = dateRangeStr.split(' - ')
+
     // Tentar diferentes formatos de data
-    let from: Date | null = null;
-    let to: Date | null = null;
-    
+    let from: Date | null = null
+    let to: Date | null = null
+
     // Tentar formato ISO (YYYY-MM-DD)
     try {
-      from = parseISO(fromStr.trim());
-      to = parseISO(toStr.trim());
+      from = parseISO(fromStr.trim())
+      to = parseISO(toStr.trim())
     } catch (e) {
       // Ignorar erro e tentar próximo formato
     }
-    
+
     // Tentar formato DD/MM/YYYY
     if (!from || isNaN(from.getTime()) || !to || isNaN(to.getTime())) {
       try {
-        from = parse(fromStr.trim(), 'dd/MM/yyyy', new Date());
-        to = parse(toStr.trim(), 'dd/MM/yyyy', new Date());
+        from = parse(fromStr.trim(), 'dd/MM/yyyy', new Date())
+        to = parse(toStr.trim(), 'dd/MM/yyyy', new Date())
       } catch (e) {
         // Ignorar erro e tentar próximo formato
       }
     }
-    
+
     // Tentar formato DD/MM/YY
     if (!from || isNaN(from.getTime()) || !to || isNaN(to.getTime())) {
       try {
-        from = parse(fromStr.trim(), 'dd/MM/yy', new Date());
-        to = parse(toStr.trim(), 'dd/MM/yy', new Date());
+        from = parse(fromStr.trim(), 'dd/MM/yy', new Date())
+        to = parse(toStr.trim(), 'dd/MM/yy', new Date())
       } catch (e) {
         // Ignorar erro
       }
     }
-    
+
     if (!from || isNaN(from.getTime()) || !to || isNaN(to.getTime())) {
-      throw new Error('Não foi possível parsear as datas');
+      throw new Error('Não foi possível parsear as datas')
     }
-    
-    return { from, to };
+
+    return { from, to }
   } catch (error) {
-    throw new Error('Formato de intervalo de datas inválido. Use "YYYY-MM-DD - YYYY-MM-DD" ou "DD/MM/YYYY - DD/MM/YYYY".');
+    throw new Error(
+      'Formato de intervalo de datas inválido. Use "YYYY-MM-DD - YYYY-MM-DD" ou "DD/MM/YYYY - DD/MM/YYYY".',
+    )
   }
 }
 
@@ -110,9 +114,19 @@ export function parseDateRange(dateRangeStr: string): { from: Date; to: Date } {
 function getMesNumero(mes: string): number {
   // Corrigido: Adicionado tipo para o objeto mesesMap com índice de string
   const mesesMap: { [key: string]: number } = {
-    'JAN': 1, 'FEV': 2, 'MAR': 3, 'ABR': 4, 'MAI': 5, 'JUN': 6,
-    'JUL': 7, 'AGO': 8, 'SET': 9, 'OUT': 10, 'NOV': 11, 'DEZ': 12
-  };
-  
-  return mesesMap[mes.toUpperCase()] || 0;
+    JAN: 1,
+    FEV: 2,
+    MAR: 3,
+    ABR: 4,
+    MAI: 5,
+    JUN: 6,
+    JUL: 7,
+    AGO: 8,
+    SET: 9,
+    OUT: 10,
+    NOV: 11,
+    DEZ: 12,
+  }
+
+  return mesesMap[mes.toUpperCase()] || 0
 }
