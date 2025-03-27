@@ -1,4 +1,4 @@
-import ExtratoModel from '../models/ExtratoModel'
+import ExtratoModel from '@/models/ExtratoModel'
 import mongoose from 'mongoose'
 import { format, startOfWeek } from 'date-fns'
 

@@ -1,14 +1,15 @@
 import { Router } from 'express'
 import multer from 'multer'
 import path from 'path'
-import { ExtratoController } from '../controllers/ExtratoController'
+import fs from 'fs'
+import { ExtratoController } from '@/controllers/ExtratoController'
 
 // Configuração do Multer para upload de arquivos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Garante que o diretório de uploads existe
     const dir = path.join(__dirname, '../../uploads')
-    require('fs').mkdirSync(dir, { recursive: true })
+    fs.mkdirSync(dir, { recursive: true })
     cb(null, dir)
   },
   filename: (req, file, cb) => {

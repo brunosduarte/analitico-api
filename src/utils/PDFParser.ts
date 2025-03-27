@@ -1,5 +1,5 @@
 import PDFParser from 'pdf2json'
-import { Extrato, Trabalho, ResumoExtrato } from '../schemas/ExtratoSchema'
+import { Extrato, Trabalho, ResumoExtrato } from '@/schemas/ExtratoSchema'
 
 export class PDFParserError extends Error {
   constructor(message: string) {

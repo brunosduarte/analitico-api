@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
-import { PDFService } from '../services/PDFService'
+import { PDFService } from '@/services/PDFService'
 import { z } from 'zod'
-import ExtratoModel from '../models/ExtratoModel'
-import { validateDateParams } from '../utils/dateUtils'
+import ExtratoModel from '@/models/ExtratoModel'
+import { validateDateParams } from '@/utils/dateUtils'
 
 export class ExtratoController {
   static async uploadExtratoAnalitico(req: Request, res: Response) {

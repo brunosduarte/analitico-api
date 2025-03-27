@@ -1,9 +1,9 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import { connectDB } from './config/database'
-import extratoRoutes from './routes/extratoRoutes'
-import analyticsRoutes from './routes/analyticsRoutes'
+import { connectDB } from '@/config/database'
+import extratoRoutes from '@/routes/extratoRoutes'
+import analyticsRoutes from '@/routes/analyticsRoutes'
 
 // Carrega variáveis de ambiente
 dotenv.config()

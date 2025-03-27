@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose'
-import { Extrato, Trabalho, ResumoExtrato } from '../schemas/ExtratoSchema'
+import { Extrato, Trabalho, ResumoExtrato } from '@/schemas/ExtratoSchema'
 
 const TrabalhoSchema = new Schema<Trabalho>({
   dia: { type: String, required: true },

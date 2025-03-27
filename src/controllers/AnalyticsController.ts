@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
-import { AnalyticsService } from '../services/AnalyticsService'
-import { validateDateParams } from '../utils/dateUtils'
+import { AnalyticsService } from '@/services/AnalyticsService'
+import { validateDateParams } from '@/utils/dateUtils'
 
 export class AnalyticsController {
   /**

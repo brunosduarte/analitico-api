@@ -1,3 +1,5 @@
+// Este script é executado pelo MongoDB e usa variáveis disponíveis no seu ambiente
+/* global db, print */
 // Script para inicialização do MongoDB
 // Este script cria um usuário específico para a aplicação com permissões apenas no banco de dados necessário
 
@@ -23,4 +25,4 @@ db.createUser({
   ],
 })
 
-console.log('Inicialização do MongoDB concluída com sucesso!')
+print('Inicialização do MongoDB concluída com sucesso!')

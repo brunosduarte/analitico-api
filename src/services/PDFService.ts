@@ -1,7 +1,7 @@
 import * as fs from 'fs'
-import { parseExtratoAnalitico } from '../utils/PDFParser'
-import ExtratoModel from '../models/ExtratoModel'
-import { Extrato } from '../schemas/ExtratoSchema'
+import { parseExtratoAnalitico } from '@/utils/PDFParser'
+import ExtratoModel from '@/models/ExtratoModel'
+import { Extrato } from '@/schemas/ExtratoSchema'
 
 export class PDFService {
   static async processarExtratoPDF(filePath: string): Promise<Extrato> {
