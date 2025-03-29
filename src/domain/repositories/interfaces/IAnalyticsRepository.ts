@@ -1,5 +1,3 @@
-// import { Extrato } from '../../entities/Extrato'
-
 export interface TomadorAnalytics {
   tomador: string
   tomadorNome: string
@@ -42,7 +40,7 @@ export interface FunctionDistributionItem {
 export interface DashboardSummary {
   totalFainas: number
   mediaFainasSemana: number
-  domFerTrabalhados: number // Alterado para contar apenas domingos e feriados
+  domFerTrabalhados: number
   mediaBrutoFaina: number
   mediaLiquidoFaina: number
 }

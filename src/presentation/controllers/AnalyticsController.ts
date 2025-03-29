@@ -48,7 +48,6 @@ export class AnalyticsController {
 
   async getTomadoresAnalytics(req: Request, res: Response, next: NextFunction) {
     try {
-      // Validar parâmetros
       const validQuery = extratoIdsSchema.safeParse(req.query)
 
       if (!validQuery.success) {
@@ -61,7 +60,6 @@ export class AnalyticsController {
 
       const { extratoIds } = validQuery.data
 
-      // Converter string de IDs para array
       const ids: string[] = Array.isArray(extratoIds)
         ? (extratoIds as string[])
         : (extratoIds as string).split(',')
@@ -79,7 +77,6 @@ export class AnalyticsController {
 
   async getSalaryBreakdown(req: Request, res: Response, next: NextFunction) {
     try {
-      // Validar parâmetros
       const validQuery = dateParamsSchema.safeParse(req.query)
 
       if (!validQuery.success) {
@@ -90,7 +87,6 @@ export class AnalyticsController {
         })
       }
 
-      // Validar parâmetros de data
       const { mes, ano, dataInicio, dataFim } = validQuery.data
       const dateRange = await validateDateParams(mes, ano, dataInicio, dataFim)
 
@@ -107,7 +103,6 @@ export class AnalyticsController {
 
   async getShiftDistribution(req: Request, res: Response, next: NextFunction) {
     try {
-      // Validar parâmetros
       const validQuery = dateParamsSchema.safeParse(req.query)
 
       if (!validQuery.success) {
@@ -118,7 +113,6 @@ export class AnalyticsController {
         })
       }
 
-      // Validar parâmetros de data
       const { mes, ano, dataInicio, dataFim } = validQuery.data
       const dateRange = await validateDateParams(mes, ano, dataInicio, dataFim)
 
@@ -140,7 +134,6 @@ export class AnalyticsController {
     next: NextFunction,
   ) {
     try {
-      // Validar parâmetros
       const validQuery = dateParamsSchema.safeParse(req.query)
 
       if (!validQuery.success) {
@@ -151,7 +144,6 @@ export class AnalyticsController {
         })
       }
 
-      // Validar parâmetros de data
       const { mes, ano, dataInicio, dataFim } = validQuery.data
       const dateRange = await validateDateParams(mes, ano, dataInicio, dataFim)
 
@@ -169,7 +161,6 @@ export class AnalyticsController {
 
   async getTopJobs(req: Request, res: Response, next: NextFunction) {
     try {
-      // Validar parâmetros
       const validQuery = topJobsParamsSchema.safeParse(req.query)
 
       if (!validQuery.success) {
@@ -180,11 +171,8 @@ export class AnalyticsController {
         })
       }
 
-      // Validar parâmetros de data
       const { mes, ano, dataInicio, dataFim, limit } = validQuery.data
       const dateRange = await validateDateParams(mes, ano, dataInicio, dataFim)
-
-      // Converter limit para número
       const limitNum = limit || 10
 
       const topJobs = await this.getTopJobsUseCase.execute(dateRange, limitNum)
@@ -200,7 +188,6 @@ export class AnalyticsController {
 
   async getReturnsData(req: Request, res: Response, next: NextFunction) {
     try {
-      // Validar parâmetros
       const validQuery = dateParamsSchema.safeParse(req.query)
 
       if (!validQuery.success) {
@@ -211,7 +198,6 @@ export class AnalyticsController {
         })
       }
 
-      // Validar parâmetros de data
       const { mes, ano, dataInicio, dataFim } = validQuery.data
       const dateRange = await validateDateParams(mes, ano, dataInicio, dataFim)
 
@@ -226,14 +212,12 @@ export class AnalyticsController {
     }
   }
 
-  // Novo método para obter distribuição por função
   async getFunctionDistribution(
     req: Request,
     res: Response,
     next: NextFunction,
   ) {
     try {
-      // Validar parâmetros
       const validQuery = dateParamsSchema.safeParse(req.query)
 
       if (!validQuery.success) {
@@ -244,7 +228,6 @@ export class AnalyticsController {
         })
       }
 
-      // Validar parâmetros de data
       const { mes, ano, dataInicio, dataFim } = validQuery.data
       const dateRange = await validateDateParams(mes, ano, dataInicio, dataFim)
 
@@ -262,7 +245,6 @@ export class AnalyticsController {
 
   async getDashboardSummary(req: Request, res: Response, next: NextFunction) {
     try {
-      // Validar parâmetros
       const validQuery = dateParamsSchema.safeParse(req.query)
 
       if (!validQuery.success) {
@@ -273,7 +255,6 @@ export class AnalyticsController {
         })
       }
 
-      // Validar parâmetros de data
       const { mes, ano, dataInicio, dataFim } = validQuery.data
       const dateRange = await validateDateParams(mes, ano, dataInicio, dataFim)
 

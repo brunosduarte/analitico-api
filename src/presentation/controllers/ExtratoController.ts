@@ -12,7 +12,6 @@ import {
 import { validateDateParams } from '../../infrastructure/utils/date/DateUtils'
 
 export class ExtratoController {
-  // Declaração de dependências como propriedades privadas
   private readonly createExtratoUseCase: CreateExtratoUseCase
   private readonly findExtratoByIdUseCase: FindExtratoByIdUseCase
   private readonly listExtratosUseCase: ListExtratosUseCase
@@ -20,7 +19,6 @@ export class ExtratoController {
   private readonly getResumoMensalUseCase: GetResumoMensalUseCase
   private readonly getTrabalhosByTomadorUseCase: GetTrabalhosByTomadorUseCase
 
-  // Inicialização das dependências no construtor
   constructor(
     createExtratoUseCase: CreateExtratoUseCase,
     findExtratoByIdUseCase: FindExtratoByIdUseCase,
@@ -43,10 +41,8 @@ export class ExtratoController {
     next: NextFunction,
   ) {
     try {
-      // O arquivo já foi validado pelo middleware
       const filePath = req.file!.path
 
-      // Processar o arquivo PDF
       const dadosExtrato = await this.createExtratoUseCase.execute(filePath)
 
       return res.status(200).json({
@@ -68,7 +64,6 @@ export class ExtratoController {
 
   async listarExtratos(req: Request, res: Response, next: NextFunction) {
     try {
-      // Validar os parâmetros de consulta
       const validQuery = extratoFilterSchema.safeParse(req.query)
 
       if (!validQuery.success) {
@@ -79,7 +74,6 @@ export class ExtratoController {
         })
       }
 
-      // Aplicar filtros
       const extratos = await this.listExtratosUseCase.execute(validQuery.data)
 
       return res.status(200).json({
@@ -97,7 +91,6 @@ export class ExtratoController {
     next: NextFunction,
   ) {
     try {
-      // Validar os parâmetros de consulta
       const validQuery = periodFilterSchema.safeParse(req.query)
 
       if (!validQuery.success) {

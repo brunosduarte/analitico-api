@@ -14,6 +14,10 @@ import ExtratoModel from '../models/ExtratoModel'
 import { DatabaseError } from '../../../../domain/errors/DatabaseError'
 import { getDay } from 'date-fns'
 import { getMesAbreviado, getMesNumero } from '../../../utils/date/DateUtils'
+import {
+  FERIADOS_NACIONAIS_FIXOS,
+  FUNCTION_NAMES,
+} from '../../../../shared/constants'
 
 export class MongoAnalyticsRepository implements IAnalyticsRepository {
   async getTomadoresAnalytics(
@@ -109,9 +113,7 @@ export class MongoAnalyticsRepository implements IAnalyticsRepository {
       ].filter((item) => item.value > 0)
     } catch (error) {
       throw new DatabaseError(
-        error instanceof Error
-          ? error.message
-          : 'Erro ao obter breakdown salarial',
+        error instanceof Error ? error.message : 'Erro ao obter salario bruto',
       )
     }
   }
@@ -256,22 +258,9 @@ export class MongoAnalyticsRepository implements IAnalyticsRepository {
         { $sort: { totalTrabalhos: -1 } },
       ])
 
-      // Mapeamento de códigos de função para nomes
-      const functionNames: Record<string, string> = {
-        '101': 'Capataz',
-        '103': 'CM Porão',
-        '104': 'CM Conexo',
-        '431': 'Motorista VL',
-        '521': 'Operador PC',
-        '527': 'Operador EH',
-        '801': 'Soldado',
-        '802': 'Sinaleiro',
-        '803': 'Conexo',
-      }
-
       // Converter para o formato esperado pelo frontend
       return aggregation.map((item) => ({
-        name: functionNames[item._id] || `Função ${item._id}`,
+        name: FUNCTION_NAMES[item._id] || `Função ${item._id}`,
         code: item._id,
         value: item.totalTrabalhos,
         totalValue: item.totalValor,
@@ -308,19 +297,6 @@ export class MongoAnalyticsRepository implements IAnalyticsRepository {
       let totalLiquido = 0
       const domFerTrabalhadosSet = new Set<string>()
 
-      // Lista de feriados nacionais (simplificada)
-      const feriados = [
-        // Feriados fixos (formato: "DD/MM")
-        '01/01', // Confraternização Universal
-        '21/04', // Tiradentes
-        '01/05', // Dia do Trabalho
-        '07/09', // Independência
-        '12/10', // Nossa Senhora Aparecida
-        '02/11', // Finados
-        '15/11', // Proclamação da República
-        '25/12', // Natal
-      ]
-
       // Processar todos os trabalhos
       extratos.forEach((extrato) => {
         const ano = parseInt(extrato.ano)
@@ -335,7 +311,7 @@ export class MongoAnalyticsRepository implements IAnalyticsRepository {
           // Verificar se é domingo ou feriado
           if (
             getDay(dataTrabalho) === 0 || // Domingo
-            feriados.includes(formattedDate) // Feriado
+            FERIADOS_NACIONAIS_FIXOS.includes(formattedDate) // Feriado
           ) {
             // Adicionar ao conjunto de domingos/feriados trabalhados
             domFerTrabalhadosSet.add(formattedDate)

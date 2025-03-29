@@ -1,4 +1,4 @@
-import 'dotenv/config' // Garantir que as variáveis de ambiente sejam carregadas
+import 'dotenv/config'
 import { createServer } from './presentation/server'
 import { connectDB } from './infrastructure/database/mongoose/connection'
 import { DEFAULT_PORT } from './shared/constants'

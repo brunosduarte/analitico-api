@@ -5,10 +5,7 @@ import {
 import { Extrato } from '../../../../domain/entities/Extrato'
 import ExtratoModel from '../models/ExtratoModel'
 import { DatabaseError } from '../../../../domain/errors/DatabaseError'
-import {
-  // getMesNumero,
-  getMesAbreviado,
-} from '../../../utils/date/DateUtils'
+import { getMesAbreviado } from '../../../utils/date/DateUtils'
 
 export class MongoExtratoRepository implements IExtratoRepository {
   async create(extrato: Extrato): Promise<Extrato> {

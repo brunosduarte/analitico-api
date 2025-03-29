@@ -2,6 +2,7 @@ import PDFParser from 'pdf2json'
 import { Extrato } from '../../../domain/entities/Extrato'
 import { Trabalho } from '../../../domain/entities/Trabalho'
 import { ResumoExtrato } from '../../../domain/entities/ResumoExtrato'
+import { TOMADORES_CONHECIDOS } from '../../../shared/constants'
 // import { PDFExtractionError } from '../../../domain/errors/PDFExtractionError'
 
 export class PDFParserError extends Error {
@@ -11,23 +12,8 @@ export class PDFParserError extends Error {
   }
 }
 
-// Lista de tomadores conhecidos para melhorar a identificação
-const TOMADORES_CONHECIDOS = [
-  'AGM',
-  'SAGRES',
-  'TECON',
-  'TERMASA',
-  'ROCHA RS',
-  'LIVENPORT',
-  'BIANCHINI',
-  'SERRA MOR',
-  'RGLP',
-  'ORION',
-  'CTIL',
-]
-
 // Função para normalizar valores numéricos e evitar NaN
-const normalizeNumber = (value: string | number): number => {
+export const normalizeNumber = (value: string | number): number => {
   // Se o valor já for um número, verificar se é NaN ou válido
   if (typeof value === 'number') {
     return isNaN(value) ? 0 : value
@@ -44,7 +30,7 @@ const normalizeNumber = (value: string | number): number => {
 }
 
 // Função para garantir que um objeto ResumoExtrato não tenha valores NaN
-const validateResumoExtrato = (resumo: ResumoExtrato): ResumoExtrato => {
+export const validateResumoExtrato = (resumo: ResumoExtrato): ResumoExtrato => {
   return {
     baseDeCalculo: isNaN(resumo.baseDeCalculo) ? 0 : resumo.baseDeCalculo,
     inss: isNaN(resumo.inss) ? 0 : resumo.inss,
@@ -67,7 +53,7 @@ const validateResumoExtrato = (resumo: ResumoExtrato): ResumoExtrato => {
 }
 
 // Função para validar um trabalho individual
-const validateTrabalho = (trabalho: Trabalho): Trabalho => {
+export const validateTrabalho = (trabalho: Trabalho): Trabalho => {
   return {
     ...trabalho,
     baseDeCalculo: isNaN(trabalho.baseDeCalculo) ? 0 : trabalho.baseDeCalculo,
@@ -99,7 +85,7 @@ const validateTrabalho = (trabalho: Trabalho): Trabalho => {
 }
 
 // Função para extrair cabeçalho
-const extractHeader = (
+export const extractHeader = (
   textContent: string[],
 ): {
   matricula: string

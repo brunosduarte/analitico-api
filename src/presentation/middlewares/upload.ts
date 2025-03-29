@@ -2,13 +2,10 @@ import { Request, Response, NextFunction } from 'express'
 import { DiskStorageService } from '../../infrastructure/services/storage/DiskStorageService'
 import { ValidationError } from '../../domain/errors/ValidationError'
 
-// Instanciar o serviço de armazenamento
 const diskStorage = new DiskStorageService()
 
-// Configurar o middleware de upload
 export const uploadMiddleware = diskStorage.configureMulter().single('arquivo')
 
-// Middleware para validar o arquivo enviado
 export const validateUploadedFile = (
   req: Request,
   res: Response,

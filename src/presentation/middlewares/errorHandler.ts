@@ -1,8 +1,4 @@
-import {
-  Request,
-  Response,
-  // NextFunction
-} from 'express'
+import { Request, Response } from 'express'
 import { AppError } from '../../domain/errors/AppError'
 import { ValidationError } from '../../domain/errors/ValidationError'
 import { NotFoundError } from '../../domain/errors/NotFoundError'
@@ -13,7 +9,6 @@ export function errorHandler(
   error: Error,
   req: Request,
   res: Response,
-  // next: NextFunction,
 ): Response {
   // Log do erro para debugging
   console.error(`[Error] ${error.name}: ${error.message}`)
