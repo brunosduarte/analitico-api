@@ -6,12 +6,13 @@ import {
   WeeklyWorkItem,
   TopJobItem,
   ReturnsDataItem,
+  FunctionDistributionItem,
   DashboardSummary,
 } from '../../../../domain/repositories/interfaces/IAnalyticsRepository'
 import mongoose from 'mongoose'
 import ExtratoModel from '../models/ExtratoModel'
 import { DatabaseError } from '../../../../domain/errors/DatabaseError'
-import { format, startOfWeek } from 'date-fns'
+import { getDay } from 'date-fns'
 import { getMesAbreviado, getMesNumero } from '../../../utils/date/DateUtils'
 
 export class MongoAnalyticsRepository implements IAnalyticsRepository {
@@ -149,75 +150,6 @@ export class MongoAnalyticsRepository implements IAnalyticsRepository {
     }
   }
 
-  async getWeeklyWorkDistribution(
-    startDate: Date,
-    endDate: Date,
-  ): Promise<WeeklyWorkItem[]> {
-    try {
-      // Criar filtro por período
-      const dateFilter = this.createDateFilter(startDate, endDate)
-
-      // Primeiro, obter todos os trabalhos no período
-      const extratos = await ExtratoModel.find(dateFilter)
-
-      // Processar trabalhos e agrupar por semana e mês
-      interface WeeklyDataMonth {
-        [monthKey: string]: number
-      }
-
-      interface WeeklyData {
-        [weekKey: string]: WeeklyDataMonth
-      }
-
-      const weeklyData: WeeklyData = {}
-
-      extratos.forEach((extrato) => {
-        const ano = parseInt(extrato.ano)
-        const mesIndex = getMesNumero(extrato.mes) - 1 // 0-indexed
-
-        ;(extrato.trabalhos || []).forEach((trabalho) => {
-          const dia = parseInt(trabalho.dia)
-          const date = new Date(ano, mesIndex, dia)
-
-          // Obter o início da semana para usar como chave
-          const weekStart = startOfWeek(date, { weekStartsOn: 0 })
-          const weekKey = format(weekStart, 'MM/dd')
-          const monthKey = format(date, 'MM/yy')
-
-          if (!weeklyData[weekKey]) {
-            weeklyData[weekKey] = {}
-          }
-
-          if (!weeklyData[weekKey][monthKey]) {
-            weeklyData[weekKey][monthKey] = 0
-          }
-
-          weeklyData[weekKey][monthKey] += 1
-        })
-      })
-
-      // Converter para o formato esperado pelo frontend
-      return Object.entries(weeklyData)
-        .map(([week, months]) => {
-          return {
-            week: `Semana ${week}`,
-            ...months,
-          }
-        })
-        .sort((a, b) => {
-          const weekA = a.week.split(' ')[1]
-          const weekB = b.week.split(' ')[1]
-          return weekA.localeCompare(weekB)
-        })
-    } catch (error) {
-      throw new DatabaseError(
-        error instanceof Error
-          ? error.message
-          : 'Erro ao obter distribuição semanal de trabalhos',
-      )
-    }
-  }
-
   async getTopJobs(
     startDate: Date,
     endDate: Date,
@@ -302,6 +234,57 @@ export class MongoAnalyticsRepository implements IAnalyticsRepository {
     }
   }
 
+  async getFunctionDistribution(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<FunctionDistributionItem[]> {
+    try {
+      // Criar filtro por período
+      const dateFilter = this.createDateFilter(startDate, endDate)
+
+      // Agregação para obter trabalhos agrupados por função
+      const aggregation = await ExtratoModel.aggregate([
+        { $match: dateFilter },
+        { $unwind: '$trabalhos' },
+        {
+          $group: {
+            _id: '$trabalhos.fun',
+            totalTrabalhos: { $sum: 1 },
+            totalValor: { $sum: '$trabalhos.baseDeCalculo' },
+          },
+        },
+        { $sort: { totalTrabalhos: -1 } },
+      ])
+
+      // Mapeamento de códigos de função para nomes
+      const functionNames: Record<string, string> = {
+        '101': 'Capataz',
+        '103': 'CM Porão',
+        '104': 'CM Conexo',
+        '431': 'Motorista VL',
+        '521': 'Operador PC',
+        '527': 'Operador EH',
+        '801': 'Soldado',
+        '802': 'Sinaleiro',
+        '803': 'Conexo',
+      }
+
+      // Converter para o formato esperado pelo frontend
+      return aggregation.map((item) => ({
+        name: functionNames[item._id] || `Função ${item._id}`,
+        code: item._id,
+        value: item.totalTrabalhos,
+        totalValue: item.totalValor,
+      }))
+    } catch (error) {
+      throw new DatabaseError(
+        error instanceof Error
+          ? error.message
+          : 'Erro ao obter distribuição por função',
+      )
+    }
+  }
+
   async getDashboardSummary(
     startDate: Date,
     endDate: Date,
@@ -323,21 +306,44 @@ export class MongoAnalyticsRepository implements IAnalyticsRepository {
       let totalTrabalhos = 0
       let totalBruto = 0
       let totalLiquido = 0
-      const diasTrabalhados = new Set()
+      const domFerTrabalhadosSet = new Set<string>()
+
+      // Lista de feriados nacionais (simplificada)
+      const feriados = [
+        // Feriados fixos (formato: "DD/MM")
+        '01/01', // Confraternização Universal
+        '21/04', // Tiradentes
+        '01/05', // Dia do Trabalho
+        '07/09', // Independência
+        '12/10', // Nossa Senhora Aparecida
+        '02/11', // Finados
+        '15/11', // Proclamação da República
+        '25/12', // Natal
+      ]
 
       // Processar todos os trabalhos
       extratos.forEach((extrato) => {
         const ano = parseInt(extrato.ano)
         const mesIndex = getMesNumero(extrato.mes) - 1
-
         ;(extrato.trabalhos || []).forEach((trabalho) => {
           const dia = parseInt(trabalho.dia)
-          const dataTrabalho = `${dia}/${mesIndex + 1}/${ano}`
+
+          // Criar data para verificar se é domingo ou feriado
+          const dataTrabalho = new Date(ano, mesIndex, dia)
+          const formattedDate = `${dia.toString().padStart(2, '0')}/${(mesIndex + 1).toString().padStart(2, '0')}`
+
+          // Verificar se é domingo ou feriado
+          if (
+            getDay(dataTrabalho) === 0 || // Domingo
+            feriados.includes(formattedDate) // Feriado
+          ) {
+            // Adicionar ao conjunto de domingos/feriados trabalhados
+            domFerTrabalhadosSet.add(formattedDate)
+          }
 
           totalTrabalhos += 1
           totalBruto += trabalho.baseDeCalculo || 0
           totalLiquido += trabalho.liquido || 0
-          diasTrabalhados.add(dataTrabalho)
         })
       })
 
@@ -351,7 +357,7 @@ export class MongoAnalyticsRepository implements IAnalyticsRepository {
       return {
         totalFainas: totalTrabalhos,
         mediaFainasSemana,
-        diasTrabalhados: diasTrabalhados.size,
+        domFerTrabalhados: domFerTrabalhadosSet.size,
         mediaBrutoFaina,
         mediaLiquidoFaina,
       }
@@ -364,9 +370,88 @@ export class MongoAnalyticsRepository implements IAnalyticsRepository {
     }
   }
 
-  /**
-   * Cria um filtro de data baseado no intervalo fornecido
-   */
+  async getWeeklyWorkDistribution(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<WeeklyWorkItem[]> {
+    try {
+      // Criar filtro por período
+      const dateFilter = this.createDateFilter(startDate, endDate)
+
+      // Obter todos os trabalhos no período
+      const extratos = await ExtratoModel.find(dateFilter)
+
+      // Estrutura para armazenar trabalhos por semana e mês
+      interface WeekData {
+        [mesAno: string]: {
+          [semana: number]: number
+        }
+      }
+
+      const weeklyData: WeekData = {}
+
+      // Processar todos os trabalhos
+      extratos.forEach((extrato) => {
+        const ano = parseInt(extrato.ano)
+        const mes = extrato.mes
+        // const mesIndex = getMesNumero(mes) - 1
+        const mesAno = `${mes}/${ano}`
+
+        if (!weeklyData[mesAno]) {
+          weeklyData[mesAno] = {
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0,
+            5: 0,
+          }
+        }
+
+        // Processar cada trabalho
+        ;(extrato.trabalhos || []).forEach((trabalho) => {
+          const dia = parseInt(trabalho.dia)
+
+          // Determinar a semana do mês (1-5)
+          // Semana 1: dias 1-7
+          // Semana 2: dias 8-14
+          // Semana 3: dias 15-21
+          // Semana 4: dias 22-28
+          // Semana 5: dias 29-31
+          let semana = Math.ceil(dia / 7)
+          if (semana > 5) semana = 5 // Limitar a 5 semanas no máximo
+
+          // Incrementar contagem
+          weeklyData[mesAno][semana]++
+        })
+      })
+
+      // Converter para o formato esperado pela interface
+      // Formato: array de objetos com week e um campo para cada mês
+      const formattedData: WeeklyWorkItem[] = [
+        { week: 'Semana 1' },
+        { week: 'Semana 2' },
+        { week: 'Semana 3' },
+        { week: 'Semana 4' },
+        { week: 'Semana 5' },
+      ]
+
+      // Adicionar dados de cada mês para cada semana
+      for (const mesAno in weeklyData) {
+        for (let semana = 1; semana <= 5; semana++) {
+          formattedData[semana - 1][mesAno] = weeklyData[mesAno][semana] || 0
+        }
+      }
+
+      return formattedData
+    } catch (error) {
+      throw new DatabaseError(
+        error instanceof Error
+          ? error.message
+          : 'Erro ao obter distribuição semanal de trabalhos',
+      )
+    }
+  }
+
   private createDateFilter(startDate: Date, endDate: Date): any {
     const startYear = startDate.getFullYear().toString()
     const endYear = endDate.getFullYear().toString()

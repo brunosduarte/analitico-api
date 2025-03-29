@@ -1,9 +1,4 @@
-import {
-  createContainer,
-  asClass,
-  // asValue,
-  InjectionMode,
-} from 'awilix'
+import { createContainer, asClass, InjectionMode } from 'awilix'
 import { IExtratoRepository } from '../../domain/repositories/interfaces/IExtratoRepository'
 import { IAnalyticsRepository } from '../../domain/repositories/interfaces/IAnalyticsRepository'
 import { IPDFExtractorService } from '../../domain/services/interfaces/IPDFExtractorService'
@@ -27,6 +22,7 @@ import { GetWeeklyWorkDistributionUseCase } from '../../application/usecases/ana
 import { GetTopJobsUseCase } from '../../application/usecases/analytics/GetTopJobsUseCase'
 import { GetReturnsDataUseCase } from '../../application/usecases/analytics/GetReturnsDataUseCase'
 import { GetDashboardSummaryUseCase } from '../../application/usecases/analytics/GetDashboardSummaryUseCase'
+import { GetFunctionDistributionUseCase } from '../../application/usecases/analytics/GetFunctionDistributionUseCase'
 
 import { ExtratoController } from '../../presentation/controllers/ExtratoController'
 import { AnalyticsController } from '../../presentation/controllers/AnalyticsController'
@@ -67,6 +63,7 @@ container.register({
   getTopJobsUseCase: asClass(GetTopJobsUseCase),
   getReturnsDataUseCase: asClass(GetReturnsDataUseCase),
   getDashboardSummaryUseCase: asClass(GetDashboardSummaryUseCase),
+  getFunctionDistributionUseCase: asClass(GetFunctionDistributionUseCase), // Novo caso de uso
 
   // Controllers
   ExtratoController: asClass(ExtratoController),

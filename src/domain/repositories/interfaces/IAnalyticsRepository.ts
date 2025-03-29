@@ -1,4 +1,4 @@
-import { Extrato } from '../../entities/Extrato'
+// import { Extrato } from '../../entities/Extrato'
 
 export interface TomadorAnalytics {
   tomador: string
@@ -32,10 +32,17 @@ export interface ReturnsDataItem {
   value: number
 }
 
+export interface FunctionDistributionItem {
+  name: string
+  code: string
+  value: number
+  totalValue: number
+}
+
 export interface DashboardSummary {
   totalFainas: number
   mediaFainasSemana: number
-  diasTrabalhados: number
+  domFerTrabalhados: number // Alterado para contar apenas domingos e feriados
   mediaBrutoFaina: number
   mediaLiquidoFaina: number
 }
@@ -60,5 +67,9 @@ export interface IAnalyticsRepository {
     limit?: number,
   ): Promise<TopJobItem[]>
   getReturnsData(startDate: Date, endDate: Date): Promise<ReturnsDataItem[]>
+  getFunctionDistribution(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<FunctionDistributionItem[]>
   getDashboardSummary(startDate: Date, endDate: Date): Promise<DashboardSummary>
 }

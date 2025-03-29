@@ -58,6 +58,14 @@ router.get(
   ),
 )
 
+// Nova rota para obter distribuição por função
+router.get(
+  '/funcoes',
+  asyncHandler((req, res, next) =>
+    analyticsController.getFunctionDistribution(req, res, next),
+  ),
+)
+
 // Rota para obter resumo do dashboard
 router.get(
   '/dashboard-resumo',

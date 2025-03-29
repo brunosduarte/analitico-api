@@ -9,9 +9,14 @@ export class GetDashboardSummaryUseCase {
   }
 
   async execute(dateRange: DateRangeDTO): Promise<DashboardSummaryDTO> {
-    return this.analyticsRepository.getDashboardSummary(
+    const summary = await this.analyticsRepository.getDashboardSummary(
       dateRange.from,
       dateRange.to,
     )
+
+    return {
+      ...summary,
+      diasTrabalhados: 0, // TODO: Calculate actual value based on business requirements
+    }
   }
 }

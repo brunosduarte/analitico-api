@@ -6,6 +6,7 @@ import { GetWeeklyWorkDistributionUseCase } from '../../application/usecases/ana
 import { GetTopJobsUseCase } from '../../application/usecases/analytics/GetTopJobsUseCase'
 import { GetReturnsDataUseCase } from '../../application/usecases/analytics/GetReturnsDataUseCase'
 import { GetDashboardSummaryUseCase } from '../../application/usecases/analytics/GetDashboardSummaryUseCase'
+import { GetFunctionDistributionUseCase } from '../../application/usecases/analytics/GetFunctionDistributionUseCase'
 import {
   extratoIdsSchema,
   dateParamsSchema,
@@ -22,6 +23,7 @@ export class AnalyticsController {
   private readonly getTopJobsUseCase: GetTopJobsUseCase
   private readonly getReturnsDataUseCase: GetReturnsDataUseCase
   private readonly getDashboardSummaryUseCase: GetDashboardSummaryUseCase
+  private readonly getFunctionDistributionUseCase: GetFunctionDistributionUseCase
 
   // Inicialização das dependências no construtor
   constructor(
@@ -32,6 +34,7 @@ export class AnalyticsController {
     getTopJobsUseCase: GetTopJobsUseCase,
     getReturnsDataUseCase: GetReturnsDataUseCase,
     getDashboardSummaryUseCase: GetDashboardSummaryUseCase,
+    getFunctionDistributionUseCase: GetFunctionDistributionUseCase,
   ) {
     this.getTomadoresAnalyticsUseCase = getTomadoresAnalyticsUseCase
     this.getSalaryBreakdownUseCase = getSalaryBreakdownUseCase
@@ -40,6 +43,7 @@ export class AnalyticsController {
     this.getTopJobsUseCase = getTopJobsUseCase
     this.getReturnsDataUseCase = getReturnsDataUseCase
     this.getDashboardSummaryUseCase = getDashboardSummaryUseCase
+    this.getFunctionDistributionUseCase = getFunctionDistributionUseCase
   }
 
   async getTomadoresAnalytics(req: Request, res: Response, next: NextFunction) {
@@ -216,6 +220,40 @@ export class AnalyticsController {
       return res.status(200).json({
         success: true,
         data: returnsData,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // Novo método para obter distribuição por função
+  async getFunctionDistribution(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      // Validar parâmetros
+      const validQuery = dateParamsSchema.safeParse(req.query)
+
+      if (!validQuery.success) {
+        return res.status(400).json({
+          success: false,
+          message: 'Parâmetros de consulta inválidos',
+          errors: validQuery.error,
+        })
+      }
+
+      // Validar parâmetros de data
+      const { mes, ano, dataInicio, dataFim } = validQuery.data
+      const dateRange = await validateDateParams(mes, ano, dataInicio, dataFim)
+
+      const functionData =
+        await this.getFunctionDistributionUseCase.execute(dateRange)
+
+      return res.status(200).json({
+        success: true,
+        data: functionData,
       })
     } catch (error) {
       next(error)
