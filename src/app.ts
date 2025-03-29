@@ -1,46 +1,44 @@
-import express from 'express'
-import cors from 'cors'
-import dotenv from 'dotenv'
-import { connectDB } from '@/config/database'
-import extratoRoutes from '@/routes/extratoRoutes'
-import analyticsRoutes from '@/routes/analyticsRoutes'
+import 'dotenv/config' // Garantir que as variáveis de ambiente sejam carregadas
+import { createServer } from './presentation/server'
+import { connectDB } from './infrastructure/database/mongoose/connection'
+import { DEFAULT_PORT } from './shared/constants'
 
-// Carrega variáveis de ambiente
-dotenv.config()
+// Função para inicializar a aplicação
+async function bootstrap() {
+  try {
+    // Conectar ao banco de dados
+    await connectDB()
+    console.log('MongoDB conectado com sucesso')
 
-// Conecta ao banco de dados
-connectDB()
+    // Criar servidor
+    const app = createServer()
+    const PORT = process.env.PORT || DEFAULT_PORT
 
-const app = express()
-const PORT = process.env.PORT || 3000
+    // Iniciar o servidor
+    app.listen(PORT, () => {
+      console.log(`Servidor rodando na porta ${PORT}`)
+    })
 
-// Middlewares
-app.use(cors())
-app.use(express.json())
+    // Tratamento de erros não capturados
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+    })
 
-// Rotas
-app.use('/analise', analyticsRoutes) // Novas rotas de análise para o dashboard
-app.use('/', extratoRoutes) // Rotas originais de extratos
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught Exception:', error)
+      process.exit(1)
+    })
 
-// Rota de verificação de saúde
-app.get('/health', (req, res) => {
-  res
-    .status(200)
-    .json({ status: 'UP', message: 'Serviço operando normalmente' })
-})
+    return app
+  } catch (error) {
+    console.error('Erro ao inicializar a aplicação:', error)
+    process.exit(1)
+  }
+}
 
-// Middleware para tratamento de erros
-app.use((err: any, req: express.Request, res: express.Response) => {
-  console.error(err.stack)
-  res.status(500).json({
-    success: false,
-    message: 'Erro interno do servidor',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
-  })
-})
+// Iniciar a aplicação
+if (process.env.NODE_ENV !== 'test') {
+  bootstrap()
+}
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`)
-})
-
-export default app
+export { bootstrap }
